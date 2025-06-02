@@ -14,7 +14,7 @@
 
 set -e
 
-NEW_USER="user42"
+NEW_USER="rel-qoqu42"
 SSH_PORT=4242
 
 echo "[*] Installation et configuration de firewalld..."
