@@ -53,6 +53,52 @@ usermod -aG user42 $NEW_USER
 echo "[*] Expiration mot de passe..."
 chage -M 30 -m 2 -W 7 "$NEW_USER"
 
+echo "[*] Création du script de monitoring..."
+cat <<'EOF' > /root/monitoring.sh
+#!/bin/bash
+
+arch=$(uname -a)
+cpuf=$(lscpu | grep "Socket(s):" | awk '{print $2}')
+cpuv=$(grep -c ^processor /proc/cpuinfo)
+ram_total=$(free -m | awk '/^Mem:/ {print $2}')
+ram_use=$(free -m | awk '/^Mem:/ {print $3}')
+ram_percent=$(awk "BEGIN {printf \"%.2f\", ($ram_use/$ram_total)*100}")
+disk_total=$(df -BM --total | awk '/^total/ {printf "%.1fGb", $2/1024}')
+disk_use=$(df -BM --total | awk '/^total/ {print $3}')
+disk_percent=$(df -BM --total | awk '/^total/ {printf "%d", $3*100/$2}')
+cpu_idle=$(vmstat 1 2 | tail -1 | awk '{print $15}')
+cpu_load=$(awk "BEGIN {printf \"%.1f\", 100 - $cpu_idle}")
+lb=$(who -b | awk '{print $3 " " $4}')
+lvmu=$(lsblk | grep -q "lvm" && echo "yes" || echo "no")
+tcpc=$(ss -ta | grep ESTAB | wc -l)
+ulog=$(who | wc -l)
+ip=$(hostname -I | awk '{print $1}')
+mac=$(ip link show | awk '/ether/ {print $2}' | head -n 1)
+cmnd=$(journalctl _COMM=sudo | grep -c COMMAND)
+
+wall <<MSG
+	Architecture: $arch
+	CPU physical: $cpuf
+	vCPU: $cpuv
+	Memory Usage: $ram_use/${ram_total}MB (${ram_percent}%)
+	Disk Usage: $disk_use/${disk_total} (${disk_percent}%)
+	CPU load: $cpu_load%
+	Last boot: $lb
+	LVM use: $lvmu
+	Connections TCP: $tcpc ESTABLISHED
+	User log: $ulog
+	Network: IP $ip ($mac)
+	Sudo: $cmnd cmd
+MSG
+EOF
+
+chmod +x /root/monitoring.sh
+
+echo "[*] Ajout de la tâche cron pour le monitoring toutes les 10 minutes..."
+(crontab -l 2>/dev/null | grep -q '/root/monitoring.sh') || \
+(crontab -l 2>/dev/null; echo "*/10 * * * * /root/monitoring.sh") | crontab -
+
+echo "[*] Configuration du monitoring terminée."
 echo "[*] Installation de fail2ban et auditd..."
 dnf install epel-release -y
 dnf makecache
