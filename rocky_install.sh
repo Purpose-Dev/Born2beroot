@@ -46,6 +46,10 @@ EOF
 echo "[*] Sudo log..."
 echo 'Defaults logfile="/var/log/sudo.log"' >> /etc/sudoers
 
+echo "[*] Création du groupe user42 et ajout de $NEW_USER..."
+groupadd -f user42
+usermod -aG user42 $NEW_USER
+
 echo "[*] Expiration mot de passe..."
 chage -M 30 -m 2 -W 7 "$NEW_USER"
 
