@@ -37,6 +37,7 @@ cat <<EOF > /etc/security/pwquality.conf
 minlen = 10
 dcredit = 1
 ucredit = 1
+lcredit = 1
 maxrepeat = 3
 reject_username = 1
 difok = 7
