@@ -17,6 +17,8 @@ set -e
 NEW_USER="rel-qoqu42"
 SSH_PORT=4242
 
+sudo dnf install policycoreutils-python-utils -y
+
 echo "[*] Installation et configuration de firewalld..."
 dnf install firewalld -y
 systemctl enable --now firewalld
