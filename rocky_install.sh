@@ -14,7 +14,7 @@
 
 set -e
 
-NEW_USER="rel-qoqu42"
+NEW_USER="yaboukar"
 SSH_PORT=4242
 
 sudo dnf install policycoreutils-python-utils -y
